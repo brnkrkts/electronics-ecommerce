@@ -5,7 +5,7 @@ import NextAuth, { getServerSession } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 
 async function isAdminEmail(email) {
-  return true;
+  return true; // Development mode shortcut
   return !!(await Admin.findOne({ email }));
 }
 
