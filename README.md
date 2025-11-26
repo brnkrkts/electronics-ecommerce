@@ -33,7 +33,7 @@ npm install
 .env dosyası oluştur:
 cp .env.example .env
 
-## 🛠 Admin Panel Kurulumu
+Admin Panel Kurulumu
 cd ../admin
 npm install
 
