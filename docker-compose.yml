@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6
+    # Local MongoDB container
+    container_name: ecommerce-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  front:
+    build:
+      context: ./front
+    container_name: ecommerce-front
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./front/.env
+    depends_on:
+      - mongo
+
+  admin:
+    build:
+      context: ./admin
+    container_name: ecommerce-admin
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./admin/.env
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
