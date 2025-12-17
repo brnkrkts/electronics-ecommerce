@@ -1,11 +1,13 @@
-import clientPromise from '@/lib/mongodb'
-import { Admin } from '@/models/Admin';
-import { MongoDBAdapter } from '@auth/mongodb-adapter'
-import NextAuth, { getServerSession } from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
+import clientPromise from "@/lib/mongodb";
+import { Admin } from "@/models/Admin";
+import { MongoDBAdapter } from "@auth/mongodb-adapter";
+import NextAuth, { getServerSession } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 
 async function isAdminEmail(email) {
-  return true; // Development mode shortcut
+  if (process.env.DEMO_MODE === "true") {
+    return true;
+  }
   return !!(await Admin.findOne({ email }));
 }
 
@@ -14,7 +16,7 @@ export const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_ID,
-      clientSecret: process.env.GOOGLE_SECRET
+      clientSecret: process.env.GOOGLE_SECRET,
     }),
   ],
   adapter: MongoDBAdapter(clientPromise),
@@ -36,6 +38,6 @@ export async function isAdminRequest(req, res) {
   if (!(await isAdminEmail(session?.user?.email))) {
     res.status(401);
     res.end();
-    throw 'not an admin';
+    throw "not an admin";
   }
 }

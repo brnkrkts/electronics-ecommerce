@@ -74,6 +74,7 @@ const ContentWrapper = styled.div`
 `;
 
 export default function Featured({product}) {
+  if (!product) return null;
   return (
     <Bg>
       <Center>
