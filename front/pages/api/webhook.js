@@ -1,18 +1,30 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import { Order } from "@/models/Order";
-const stripe = require('stripe')(process.env.STRIPE_SK);
-import {buffer} from 'micro';
+const stripe = require("stripe")(process.env.STRIPE_SK);
+import { buffer } from "micro";
 
 const endpointSecret = stripe;
 
-export default async function handler(req,res){
+if (!endpointSecret) {
+  console.error("STRIPE_WEBHOOK_SECRET is missing in environment variables.");
+}
+
+export default async function handler(req, res) {
   await mongooseConnect();
-  const sig = req.headers['stripe-signature'];
+  const sig = req.headers["stripe-signature"];
+
+  if (!sig) {
+    return res.status(400).send("Missing stripe-signature header");
+  }
 
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(await buffer(req), sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(
+      await buffer(req),
+      sig,
+      endpointSecret
+    );
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
     return;
@@ -20,24 +32,22 @@ export default async function handler(req,res){
 
   // Handle the event
   switch (event.type) {
-    case 'checkout.session.completed':
+    case "checkout.session.completed":
       const data = event.data.object;
       const orderId = data.metadata.orderId;
-      const paid = data.payment_status === 'paid';
-      if (orderId&& paid) {
-        await Order.findByIdAndUpdate(orderId,{
-          paid:true,
-        })
+      const paid = data.payment_status === "paid";
+      if (orderId && paid) {
+        await Order.findByIdAndUpdate(orderId, {
+          paid: true,
+        });
       }
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
-  res.status(200).send('ok');
+  res.status(200).send("ok");
 }
 
-export const config ={
-  api:{bodyParser:false,}
+export const config = {
+  api: { bodyParser: false },
 };
-
-

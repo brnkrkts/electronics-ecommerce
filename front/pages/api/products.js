@@ -1,34 +1,35 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import { Product } from "@/models/Product";
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export default async function handle(req, res) {
   await mongooseConnect();
   const { categories, sort, phrase, ...filters } = req.query;
-  let [sortField, sortOrder] = (sort || '_id-desc').split('-');
+  let [sortField, sortOrder] = (sort || "_id-desc").split("-");
 
   const productsQuery = {};
   if (categories) {
-    productsQuery.category = categories.split(',');
+    productsQuery.category = { $in: categories.split(",") };
   }
   if (phrase) {
-    productsQuery['$or'] = [
-      { title: { $regex: phrase, $options: 'i' } },
-      { description: { $regex: phrase, $options: 'i' } },
-
+    const safePhrase = escapeRegex(phrase);
+    productsQuery["$or"] = [
+      { title: { $regex: safePhrase, $options: "i" } },
+      { description: { $regex: safePhrase, $options: "i" } },
     ];
   }
   if (Object.keys(filters).length > 0) {
-    Object.keys(filters).forEach(filterName => {
-      productsQuery['properties.' + filterName] = filters[filterName];
+    Object.keys(filters).forEach((filterName) => {
+      productsQuery["properties." + filterName] = filters[filterName];
     });
-
   }
 
-  res.json(await Product.find(
-    productsQuery,
-    null,
-    {
-      sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 }
+  res.json(
+    await Product.find(productsQuery, null, {
+      sort: { [sortField]: sortOrder === "asc" ? 1 : -1 },
     })
   );
 }
