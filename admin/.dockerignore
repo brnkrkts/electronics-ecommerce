@@ -8,3 +8,6 @@ npm-debug.log
 Dockerfile
 docker-compose.yml
 README.md
+jest.config.js
+coverage
+.env.local
